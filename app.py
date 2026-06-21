@@ -5,15 +5,16 @@ import pandas as pd
 from PIL import Image
 import io
 import base64
+import re
 
 # Настройка страницы
 st.set_page_config(page_title="ЕГЭ-Эксперт", page_icon="🎓", layout="wide")
 
-# Инициализация клиента
+# Инициализация
 try:
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=st.secrets["OPENROUTER_API_KEY"])
 except:
-    st.error("Ошибка: API ключ не найден в Secrets. Проверьте настройки Streamlit Cloud.")
+    st.error("Ошибка: Добавьте OPENROUTER_API_KEY в Secrets приложения.")
     st.stop()
 
 def get_base64_image(image_file):
@@ -22,56 +23,56 @@ def get_base64_image(image_file):
     image.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-st.sidebar.title("Навигация")
-page = st.sidebar.radio("Перейти к", ["Главная", "Проверка"])
+# Меню
+page = st.sidebar.radio("Навигация", ["Главная", "Проверка"])
 
 if page == "Главная":
     st.title("🎓 ЕГЭ-Эксперт")
-    st.markdown("Сервис для автоматической проверки сочинений по критериям ФИПИ.")
+    st.markdown("ИИ-анализ сочинений по критериям ФИПИ.")
 else:
     st.title("✍️ Проверка сочинения")
     col1, col2 = st.columns([1, 1])
-    
     with col1:
         source_text = st.text_area("Исходный текст:", height=100)
-        input_type = st.radio("Источник сочинения:", ["Текст", "Фото рукописи"])
-        if input_type == "Текст":
-            essay_text = st.text_area("Текст сочинения:", height=200)
-        else:
-            uploaded_image = st.file_uploader("Загрузите фото...", type=["jpg", "png"])
-            essay_text = None
+        input_type = st.radio("Источник:", ["Текст", "Фото"])
+        essay_text = st.text_area("Текст сочинения:", height=200) if input_type == "Текст" else None
+        uploaded_image = st.file_uploader("Загрузите фото:", type=["jpg", "png"]) if input_type == "Фото" else None
 
     with col2:
         if st.button("🚀 Проверить"):
             with st.spinner("Анализирую..."):
-                prompt = f"""
-                Ты — строгий эксперт ЕГЭ. Исходный текст: {source_text}. 
-                Проанализируй сочинение. Верни JSON с полями:
-                "corrected_text" (текст с выделенными ошибками **...**),
-                "table" (список словарей [{"Критерий": "К1", "Баллы": 0}, ...]),
-                "details" (словарь {"К1": "разбор...", ...}),
-                "total" (итоговый балл).
-                Отвечай ТОЛЬКО JSON-ом.
+                # Упростили промпт, чтобы меньше ломался
+                prompt = """
+                Ты — эксперт ЕГЭ. Проанализируй сочинение.
+                Верни ответ ТОЛЬКО в формате JSON:
+                {
+                  "corrected_text": "текст с выделением ошибок **...**",
+                  "table": {"К1": 0, "К2": 0, "К3": 0, "К4": 0, "К5": 0, "К6": 0, "К7": 0, "К8": 0, "К9": 0, "К10": 0, "К11": 0, "К12": 0},
+                  "details": {"К1": "разбор...", "К2": "разбор...", ...},
+                  "total": 0
+                }
                 """
                 
-                messages = [{"role": "user", "content": prompt + (f" Сочинение: {essay_text}" if input_type=="Текст" else "")}]
-                if input_type == "Фото рукописи":
+                messages = [{"role": "user", "content": prompt + f" Исходный текст: {source_text}. Сочинение: {essay_text if essay_text else 'см. фото'}"}]
+                if input_type == "Фото" and uploaded_image:
                     messages[0]["content"] = [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{get_base64_image(uploaded_image)}"}}]
 
                 try:
                     response = client.chat.completions.create(model="google/gemma-4-31b-it:free", messages=messages)
-                    data = json.loads(response.choices[0].message.content.replace('```json', '').replace('```', ''))
+                    content = response.choices[0].message.content
+                    # Очистка от markdown
+                    json_str = re.sub(r'^```json\s*|\s*```$', '', content.strip(), flags=re.MULTILINE)
+                    data = json.loads(json_str)
 
-                    st.metric("Итого баллов", data.get("total", 0))
-                    st.info(data.get("corrected_text", "Ошибка анализа текста"))
+                    # Вывод
+                    st.metric("Итого", data.get("total", 0))
+                    st.info(data.get("corrected_text", "Не удалось проанализировать текст."))
                     
-                    st.subheader("📊 Разбор по критериям")
-                    table_data = data.get("table", [])
+                    st.subheader("Разбор")
+                    table = data.get("table", {})
                     details = data.get("details", {})
-                    
-                    for k in ["К1", "К2", "К3", "К4", "К5", "К6", "К7", "К8", "К9", "К10", "К11", "К12"]:
-                        bal = next((item.get("Баллы", 0) for item in table_data if item.get("Критерий") == k), 0)
-                        with st.expander(f"{k} — {bal} баллов"):
+                    for k in [f"К{i}" for i in range(1, 13)]:
+                        with st.expander(f"{k} — {table.get(k, 0)} баллов"):
                             st.write(details.get(k, "Комментариев нет."))
                 except Exception as e:
-                    st.error(f"Ошибка парсинга: {e}")
+                    st.error(f"Ошибка: {e}. Попробуйте еще раз.")

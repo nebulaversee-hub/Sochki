@@ -90,8 +90,25 @@ else:
                     st.subheader("📝 Анализ текста с правками")
                     st.info(data["corrected_text"])
                     
-                    st.subheader("📊 Разбор по критериям")
-                    for k in data["details"]:
-                        bal = next(item["Баллы"] for item in data["table"] if item["Критерий"] == k) # упрощено
-                        with st.expander(f"{k} — {bal} балл(ов)"):
-                            st.write(data["details"][k])
+                    # Замени цикл обработки деталей в app.py на этот:
+st.subheader("📊 Разбор по критериям")
+
+# Получаем таблицу из данных (она может быть словарем или списком)
+table_data = data.get("table", {})
+
+for k in ["K1", "K2", "K3", "K4", "K5", "K6", "K7", "K8", "K9", "K10", "K11", "K12"]:
+    # Безопасно пытаемся достать балл
+    bal = 0
+    if isinstance(table_data, list):
+        # Если это список словарей
+        for item in table_data:
+            if item.get("Критерий") == k:
+                bal = item.get("Баллы", 0)
+    elif isinstance(table_data, dict):
+        # Если это просто словарь баллов
+        bal = table_data.get(k, 0)
+        
+    with st.expander(f"{k} — {bal} балл(ов)"):
+        # Достаем текст комментария, если он есть в details
+        details = data.get("details", {})
+        st.write(details.get(k, "Комментарий отсутствует"))

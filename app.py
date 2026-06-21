@@ -3,10 +3,18 @@ from openai import OpenAI
 import json
 import pandas as pd
 
-# Настройка клиента OpenRouter
+# Получаем ключ из настроек Streamlit (Secrets)
+# В Streamlit Cloud это настраивается в разделе: Manage App -> Settings -> Secrets
+try:
+    api_key = st.secrets["OPENROUTER_API_KEY"]
+except:
+    st.error("Ошибка: API ключ не найден. Добавьте OPENROUTER_API_KEY в Secrets.")
+    st.stop()
+
+# Инициализация клиента
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1", 
-    api_key="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"
+    api_key=api_key
 )
 
 st.set_page_config(page_title="ЕГЭ-Эксперт", page_icon="🎓")
@@ -26,7 +34,7 @@ if st.button("Проверить сочинение"):
             Исходный текст: {source_text}
             Сочинение: {essay_text}
             
-            Верни ответ строго в формате JSON без лишнего текста:
+            Верни ответ строго в формате JSON, без пояснительного текста:
             {{
               "table": {{"Критерий": ["К1", "К2", "К3", "К4", "К5", "К6", "К7", "К8", "К9", "К10", "К11", "К12"], "Баллы": [0,0,0,0,0,0,0,0,0,0,0,0]}},
               "total": 0,
@@ -36,14 +44,15 @@ if st.button("Проверить сочинение"):
             
             try:
                 response = client.chat.completions.create(
-                    model="google/gemini-flash-1.5",
+                    model="google/gemma-4-31b-it:free", # Твоя модель
                     messages=[{"role": "user", "content": prompt}],
                 )
                 
-                # Парсинг ответа
+                # Обработка ответа
                 content = response.choices[0].message.content.replace('```json', '').replace('```', '')
                 data = json.loads(content)
                 
+                # Отображение данных
                 st.subheader("📊 Результаты оценки")
                 df = pd.DataFrame(data["table"])
                 st.table(df)
@@ -54,4 +63,4 @@ if st.button("Проверить сочинение"):
                 st.write(data["comment"])
                 
             except Exception as e:
-                st.error(f"Произошла ошибка при обращении к нейросети: {e}")
+                st.error(f"Произошла ошибка при анализе: {e}")

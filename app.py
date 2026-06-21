@@ -7,7 +7,7 @@
 Настройка:
     В .streamlit/secrets.toml укажите:
         OPENROUTER_API_KEY = "sk-or-..."
-        OPENROUTER_MODEL = "anthropic/claude-sonnet-4.6"   # необязательно, есть значение по умолчанию
+        OPENROUTER_MODEL = "google/gemma-4-31b-it:free"   # необязательно, есть значение по умолчанию
 """
 
 import json
@@ -69,10 +69,7 @@ PROMPT_TEMPLATE = """ВАШ ПРОМПТ ЗДЕСЬ.
 
 def call_claude_api(source_text: str, essay_text: str, model_name: str) -> str:
     """Отправляет запрос в Claude (через OpenRouter) и возвращает текст ответа."""
-    client = OpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=st.secrets["OPENROUTER_API_KEY"],
-    )
+    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=st.secrets["OPENROUTER_API_KEY"])
     prompt = PROMPT_TEMPLATE.format(source_text=source_text, essay_text=essay_text)
     response = client.chat.completions.create(
         model=model_name,
@@ -127,7 +124,7 @@ with st.sidebar:
     st.header("Настройки")
     model_name = st.text_input(
         "Модель (слаг OpenRouter)",
-        value=st.secrets.get("OPENROUTER_MODEL", "anthropic/claude-sonnet-4.6"),
+        value=st.secrets.get("OPENROUTER_MODEL", "google/gemma-4-31b-it:free"),
         help="Проверьте актуальный слаг модели на openrouter.ai/models",
     )
     st.caption("API-ключ берётся из st.secrets и не отображается в интерфейсе.")

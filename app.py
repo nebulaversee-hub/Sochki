@@ -20,6 +20,168 @@ from openai import OpenAI
 st.set_page_config(page_title="Проверка сочинений ЕГЭ", layout="wide")
 
 # ---------------------------------------------------------------------------
+# Стилизация: образ школьной тетради и экзаменационного бланка.
+# Шрифты PT Serif / PT Sans / PT Mono — шрифты ParaType с поддержкой
+# кириллицы, исторически используемые в российских учебных изданиях.
+# Красная линия слева — отсылка к полям школьной тетради; зелёный —
+# к обложке "ученической тетради" и официальным бланкам.
+# ---------------------------------------------------------------------------
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans:wght@400;700&family=PT+Mono&display=swap');
+
+    :root {
+        --paper: #FAF7EF;
+        --paper-light: #FFFEFA;
+        --ink: #20262B;
+        --green: #2E5339;
+        --green-dark: #1D3A26;
+        --red-pen: #B23A2E;
+        --gold: #C9A227;
+        --rule: #DCD5C4;
+    }
+
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: var(--paper) !important;
+    }
+    [data-testid="stAppViewContainer"] .block-container {
+        padding-top: 1.2rem;
+        max-width: 1100px;
+    }
+    body, p, span, label, div {
+        font-family: 'PT Sans', sans-serif;
+        color: var(--ink);
+    }
+
+    /* Заголовок-«обложка тетради» */
+    .exam-banner {
+        background: var(--green);
+        color: var(--paper);
+        padding: 1.1rem 1.6rem;
+        border-radius: 4px;
+        margin-bottom: 1.6rem;
+        border-left: 6px solid var(--red-pen);
+    }
+    .exam-banner h1 {
+        font-family: 'PT Serif', serif;
+        font-weight: 700;
+        font-size: 1.7rem;
+        margin: 0;
+        color: var(--paper);
+        letter-spacing: 0.01em;
+    }
+    .exam-banner p {
+        margin: 0.3rem 0 0 0;
+        font-size: 0.92rem;
+        color: var(--paper);
+        opacity: 0.85;
+    }
+
+    /* Поля ввода текста — «линованная бумага» с красными полями слева */
+    [data-testid="stTextArea"] textarea {
+        background-color: var(--paper-light);
+        background-image: repeating-linear-gradient(
+            180deg, transparent, transparent 27px, var(--rule) 28px
+        );
+        line-height: 28px;
+        border: 1px solid var(--rule);
+        border-left: 4px solid var(--red-pen);
+        border-radius: 2px;
+        font-family: 'PT Sans', sans-serif;
+        color: var(--ink);
+    }
+    [data-testid="stTextArea"] textarea:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 1px var(--green);
+    }
+
+    /* Кнопки — официально-зелёные */
+    .stButton button, .stDownloadButton button {
+        background-color: var(--green);
+        color: var(--paper) !important;
+        border: none;
+        border-radius: 3px;
+        font-family: 'PT Sans', sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 0.55rem 1.2rem;
+        transition: background-color 0.15s ease;
+    }
+    .stButton button:hover, .stDownloadButton button:hover {
+        background-color: var(--green-dark);
+        color: var(--paper) !important;
+    }
+
+    /* Карточка с проверенным сочинением */
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: var(--paper-light);
+        border: 1px solid var(--rule) !important;
+        border-left: 5px solid var(--red-pen) !important;
+        border-radius: 3px;
+        padding: 0.5rem 0.8rem;
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] p {
+        font-family: 'PT Serif', serif;
+        font-size: 1.05rem;
+        line-height: 1.75;
+        color: var(--ink);
+    }
+    [data-testid="stVerticalBlockBorderWrapper"] strong {
+        color: var(--red-pen);
+        text-decoration: underline wavy var(--red-pen);
+        text-underline-offset: 3px;
+    }
+
+    /* Баллы по критериям — клетки экзаменационного бланка */
+    [data-testid="stNumberInput"] label p {
+        font-family: 'PT Mono', monospace;
+        font-weight: 700;
+        color: var(--green-dark);
+        font-size: 0.8rem;
+    }
+    [data-testid="stNumberInput"] input {
+        font-family: 'PT Mono', monospace;
+        border: 1px solid var(--rule);
+        border-radius: 2px;
+        background-color: var(--paper-light);
+    }
+    [data-testid="stNumberInput"] input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 1px var(--green);
+    }
+
+    /* Итоговый балл — «печать» */
+    [data-testid="stMetric"] {
+        background: var(--paper-light);
+        border: 2px solid var(--gold);
+        border-radius: 10px;
+        padding: 0.8rem 1.4rem;
+        width: fit-content;
+    }
+    [data-testid="stMetricValue"] {
+        font-family: 'PT Serif', serif;
+        color: var(--green-dark) !important;
+    }
+    [data-testid="stMetricLabel"] {
+        font-family: 'PT Mono', monospace;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+    }
+
+    /* Уведомления — приглушённый «красный карандаш» вместо ярко-розового */
+    div[data-baseweb="notification"] {
+        border-left: 4px solid var(--red-pen) !important;
+        border-radius: 2px;
+        font-family: 'PT Sans', sans-serif;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------------------------
 # Структура критериев (K1–K12). Здесь хранится ТОЛЬКО рубрика ФИПИ
 # (название критерия и верхняя граница шкалы) — сами баллы за конкретное
 # сочинение нигде не зашиты и всегда вводятся пользователем / предлагаются ИИ.
@@ -45,36 +207,42 @@ MAX_SCORE = {
 }
 
 # ---------------------------------------------------------------------------
-# !!! ВСТАВЬТЕ СВОЙ ПРОМПТ СЮДА !!!
-# Промпт обязательно должен требовать от модели ответ строго в виде JSON
-# следующей структуры (без лишнего текста до/после):
-#
-# {
-#   "corrected_text": "текст сочинения, где исправленные места выделены **жирным** в markdown",
-#   "scores": {"K1": 1, "K2": 2, ..., "K12": 1},
-#   "comments": {"K1": "краткий комментарий", ..., "K12": "краткий комментарий"}
-# }
-#
-# Плейсхолдеры {source_text} и {essay_text} подставляются автоматически.
+# Промпт для проверки сочинения. При желании отредактируйте формулировки
+# критериев под свою методику — структура JSON в конце менять не нужно,
+# она используется кодом для разбора ответа.
 # ---------------------------------------------------------------------------
-PROMPT_TEMPLATE = """ВАШ ПРОМПТ ЗДЕСЬ.
+PROMPT_TEMPLATE = """Оцени сочинение ученика по критериям ЕГЭ К1–К12.
 
 ИСХОДНЫЙ ТЕКСТ:
 {source_text}
 
 СОЧИНЕНИЕ УЧЕНИКА:
 {essay_text}
+
+Верни ТОЛЬКО JSON-объект такой структуры (никакого другого текста):
+{{"corrected_text":"текст сочинения с исправлениями, ошибки выделены **жирным**","scores":{{"K1":0,"K2":0,"K3":0,"K4":0,"K5":0,"K6":0,"K7":0,"K8":0,"K9":0,"K10":0,"K11":0,"K12":0}},"comments":{{"K1":"","K2":"","K3":"","K4":"","K5":"","K6":"","K7":"","K8":"","K9":"","K10":"","K11":"","K12":""}}}}
 """
 
 
 def call_claude_api(source_text: str, essay_text: str, model_name: str) -> str:
-    """Отправляет запрос в Claude (через OpenRouter) и возвращает текст ответа."""
+    """Отправляет запрос через OpenRouter и возвращает текст ответа."""
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=st.secrets["OPENROUTER_API_KEY"])
     prompt = PROMPT_TEMPLATE.format(source_text=source_text, essay_text=essay_text)
     response = client.chat.completions.create(
         model=model_name,
         max_tokens=4000,
-        messages=[{"role": "user", "content": prompt}],
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a JSON-only response bot. "
+                    "You MUST respond with a single valid JSON object and nothing else. "
+                    "No explanations, no markdown, no code blocks, no text before or after the JSON. "
+                    "Your response must start with { and end with }."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
     )
     return response.choices[0].message.content
 
@@ -84,25 +252,27 @@ def extract_json(raw_text: str):
     Безопасно извлекает JSON-объект из ответа модели, даже если он:
     - обёрнут в markdown-блок ```json ... ```
     - содержит пояснительный текст до или после JSON
-    Возвращает dict или None, если разобрать не удалось.
+    - содержит фигурные скобки внутри пояснительного текста
+    Пробует декодировать JSON начиная с каждой найденной "{", пока не
+    получится валидный объект. Возвращает dict или None, если не вышло.
     """
     text = raw_text.strip()
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```$", "", text)
 
-    try:
-        return json.loads(text)
-    except (json.JSONDecodeError, TypeError):
-        pass
-
-    start = text.find("{")
-    end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        candidate = text[start:end + 1]
+    decoder = json.JSONDecoder()
+    search_from = 0
+    while True:
+        start = text.find("{", search_from)
+        if start == -1:
+            break
         try:
-            return json.loads(candidate)
+            obj, _ = decoder.raw_decode(text, start)
+            if isinstance(obj, dict):
+                return obj
         except json.JSONDecodeError:
             pass
+        search_from = start + 1
 
     return None
 
@@ -118,7 +288,15 @@ if "raw_response" not in st.session_state:
 # ---------------------------------------------------------------------------
 # Интерфейс
 # ---------------------------------------------------------------------------
-st.title("📝 Проверка сочинений ЕГЭ с помощью ИИ")
+st.markdown(
+    """
+    <div class="exam-banner">
+        <h1>📝 Проверка сочинений ЕГЭ</h1>
+        <p>Разбор по критериям К1–К12 с помощью ИИ</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 with st.sidebar:
     st.header("Настройки")
@@ -171,7 +349,8 @@ if result:
     st.divider()
     st.subheader("Сочинение с исправлениями")
     corrected = result.get("corrected_text", "Модель не вернула исправленный текст.")
-    st.markdown(corrected)
+    with st.container(border=True):
+        st.markdown(corrected)
 
     ai_scores = result.get("scores", {}) or {}
     ai_comments = result.get("comments", {}) or {}

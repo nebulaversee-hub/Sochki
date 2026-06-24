@@ -285,14 +285,14 @@ def inject_css():
 
 /* ── Палитра ── */
 :root {
-  --bg:       #0D1117;
-  --bg2:      #161B22;
-  --card:     #1C2128;
-  --border:   #2D333B;
-  --text:     #CDD9E5;
-  --muted:    #768390;
-  --accent:   #F5F5F5;
-  --accent-d: rgba(255,255,255,.08);
+  --bg:       #FFFFFF;
+  --bg2:      #FFFFFF;
+  --card:     #FFFFFF;
+  --border:   #D9D9D9;
+  --text:     #111111;
+  --muted:    #555555;
+  --accent:   #DC2626;
+  --accent-d: rgba(220,38,38,.08);
 }
 
 html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); margin:0; }
@@ -348,7 +348,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 .hero-h1 {
   font-family:'Playfair Display',serif;
   font-size:clamp(2.7rem,4.3vw,4.2rem); font-weight:900;
-  color:#fff; line-height:1.06; margin:0;
+  color:#111111; line-height:1.06; margin:0;
   animation:fadeUp .65s .08s ease both;
 }
 .accent {
@@ -382,7 +382,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 .paper::before {
   content:'ЕГЭ 2026 · Задание 27';
   position:absolute; top:-10px; left:18px;
-  background:var(--accent); color:#fff;
+  background:var(--accent); color:#111111;
   font-size:.6rem; font-weight:700; letter-spacing:.08em;
   padding:3px 10px; border-radius:3px;
 }
@@ -410,7 +410,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 /* Общие элементы секций */
 .sec        { max-width:1160px; margin:0 auto; }
 .sec-label  { font-size:.7rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--accent); margin-bottom:10px; }
-.sec-title  { font-family:'Playfair Display',serif; font-size:clamp(1.7rem,2.8vw,2.4rem); font-weight:700; color:#fff; margin:0 0 14px; max-width:480px; }
+.sec-title  { font-family:'Playfair Display',serif; font-size:clamp(1.7rem,2.8vw,2.4rem); font-weight:700; color:#111111; margin:0 0 14px; max-width:480px; }
 .sec-sub    { color:var(--muted); font-size:.95rem; line-height:1.7; max-width:440px; margin-bottom:50px; }
 .divider    { border:none; border-top:1px solid var(--border); margin:0; }
 
@@ -420,7 +420,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 .feat-card  { background:var(--card); border-radius:12px; padding:28px 22px; border:1px solid var(--border); transition:transform .2s,box-shadow .2s,border-color .2s; }
 .feat-card:hover { transform:translateY(-4px); box-shadow:0 12px 36px rgba(0,0,0,.35); border-color:rgba(220,38,38,.3); }
 .feat-icon  { font-size:1.9rem; margin-bottom:16px; display:block; }
-.feat-title { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:#fff; margin-bottom:10px; }
+.feat-title { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:#111111; margin-bottom:10px; }
 .feat-text  { color:var(--muted); font-size:.87rem; line-height:1.65; }
 
 /* Как работает */
@@ -432,7 +432,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
   background-image:repeating-linear-gradient(90deg, var(--accent) 0, var(--accent) 6px, transparent 6px, transparent 14px);
 }
 .step-n { width:52px; height:52px; border-radius:50%; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:700; color:var(--accent); margin-bottom:22px; background:var(--bg); position:relative; z-index:1; }
-.step-t { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:#fff; margin-bottom:10px; }
+.step-t { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:#111111; margin-bottom:10px; }
 .step-d { color:var(--muted); font-size:.87rem; line-height:1.65; }
 
 /* Критерии */
@@ -453,7 +453,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
   font-family:'Inter',sans-serif !important;
   border-radius:6px !important; font-weight:600 !important;
   transition:all .15s !important; border:none !important; cursor:pointer !important;
-  background:var(--accent) !important; color:#fff !important;
+  background:var(--accent) !important; color:#111111 !important;
   padding:12px 30px !important; font-size:.93rem !important; letter-spacing:.02em !important;
 }
 .stButton>button:hover {
@@ -484,7 +484,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 
 /* ══════════ СТРАНИЦА ПРОВЕРКИ ══════════ */
 .ch-nav { background:var(--bg2); padding:16px 6%; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
-.ch-logo { font-family:'Playfair Display',serif; font-weight:700; color:#fff; font-size:1.12rem; }
+.ch-logo { font-family:'Playfair Display',serif; font-weight:700; color:#111111; font-size:1.12rem; }
 .ch-logo span { color:var(--accent); }
 .ch-tagline { color:var(--muted); font-size:.78rem; }
 
@@ -526,11 +526,11 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
   font-size:.85rem; color:#FCA5A5; line-height:1.55;
   animation:fadeIn .4s ease both;
 }
-.transcr-note strong { color:#fff; }
+.transcr-note strong { color:#111111; }
 
 /* Результаты */
 .corr-card { background:var(--card); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:10px; padding:28px 26px; margin-bottom:34px; animation:fadeIn .45s ease both; }
-.corr-hdr  { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+.corr-hdr  { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:#111111; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
 .corr-hdr::before { content:''; display:block; width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0; }
 .corr-body { font-size:.92rem; color:var(--text); line-height:1.82; }
 .corr-body strong { color:var(--accent); background:var(--accent-d); padding:0 2px; border-radius:2px; text-decoration:underline wavy var(--accent); text-underline-offset:3px; font-weight:700; }
@@ -542,7 +542,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 .sc-card.sc-amber { border-color:#9E6A03; background:#2B1D00; }
 .sc-card.sc-red   { border-color:#DA3633; background:#2D0A0A; }
 .sc-head  { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
-.sc-k     { font-family:'JetBrains Mono',monospace; font-size:.67rem; font-weight:700; color:#fff; background:var(--accent); padding:3px 8px; border-radius:4px; letter-spacing:.05em; }
+.sc-k     { font-family:'JetBrains Mono',monospace; font-size:.67rem; font-weight:700; color:#111111; background:var(--accent); padding:3px 8px; border-radius:4px; letter-spacing:.05em; }
 .sc-frac  { font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700; }
 .sc-green .sc-frac{color:#3FB950;} .sc-amber .sc-frac{color:#E3B341;} .sc-red .sc-frac{color:#F85149;}
 .sc-name  { font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:9px; }
@@ -558,7 +558,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
 .total-stamp { width:86px; height:86px; border-radius:50%; border:3px solid var(--accent); display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--accent); flex-shrink:0; animation:stampIn .5s .65s ease both; opacity:0; animation-fill-mode:both; }
 .total-num   { font-family:'JetBrains Mono',monospace; font-size:1.75rem; font-weight:700; line-height:1; }
 .total-den   { font-size:.5rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7; }
-.total-text h3 { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; color:#fff; margin:0 0 6px; }
+.total-text h3 { font-family:'Playfair Display',serif; font-size:1.15rem; font-weight:700; color:#111111; margin:0 0 6px; }
 .total-text p  { color:var(--muted); font-size:.86rem; margin:0; line-height:1.55; }
 
 /* Ошибка */
@@ -624,7 +624,7 @@ def show_home():
     # CTA кнопка
     st.markdown("""
 <div style="background:var(--bg);padding:64px 6% 0;text-align:center;border-top:1px solid var(--border)">
-  <p style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,2vw,1.8rem);color:#fff;margin:0 0 8px;font-weight:700">
+  <p style="font-family:'Playfair Display',serif;font-size:clamp(1.3rem,2vw,1.8rem);color:#111111;margin:0 0 8px;font-weight:700">
     Готовы проверить своё сочинение?
   </p>
   <p style="color:var(--muted);font-size:.85rem;margin:0 0 30px">
@@ -714,7 +714,7 @@ def show_home():
     # Нижний CTA
     st.markdown("""
 <div class="home-cta">
-  <p style="font-family:'Playfair Display',serif;font-size:clamp(1.7rem,2.8vw,2.3rem);font-weight:700;color:#fff;margin:0 0 12px">
+  <p style="font-family:'Playfair Display',serif;font-size:clamp(1.7rem,2.8vw,2.3rem);font-weight:700;color:#111111;margin:0 0 12px">
     Начните прямо сейчас
   </p>
   <p style="color:var(--muted);font-size:.95rem;margin:0 0 32px">
@@ -757,7 +757,7 @@ def show_checker():
     # Заголовок
     st.markdown("""
 <div style="padding:28px 6% 0;max-width:1200px;margin:0 auto">
-  <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.5rem,2.3vw,2rem);font-weight:700;color:#fff;margin:0 0 6px">
+  <h1 style="font-family:'Playfair Display',serif;font-size:clamp(1.5rem,2.3vw,2rem);font-weight:700;color:#111111;margin:0 0 6px">
     Проверка сочинения
   </h1>
   <p style="color:var(--muted);font-size:.89rem;margin:0 0 24px">
@@ -976,7 +976,7 @@ def show_checker():
 
         # Оценка
         st.markdown("""
-<p style="font-family:'Playfair Display',serif;font-size:1.33rem;font-weight:700;color:#fff;margin:0 0 6px">Оценка по критериям</p>
+<p style="font-family:'Playfair Display',serif;font-size:1.33rem;font-weight:700;color:#111111;margin:0 0 6px">Оценка по критериям</p>
 <p style="color:var(--muted);font-size:.87rem;margin:0 0 22px">К1–К10 · ФИПИ 2026 · Максимум 22 балла</p>
 """, unsafe_allow_html=True)
         st.markdown(build_score_cards(result), unsafe_allow_html=True)

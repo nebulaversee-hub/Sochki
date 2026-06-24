@@ -7,7 +7,7 @@
 .streamlit/secrets.toml:
     OPENROUTER_API_KEY    = "sk-or-..."
     OPENROUTER_MODEL      = "google/gemma-4-31b-it:free"        # текстовая проверка
-    OPENROUTER_VISION_MODEL = "qwen/qwen2-vl-7b-instruct:free"  # распознавание рукописи
+    OPENROUTER_VISION_MODEL = "google/gemma-4-31b-it:free"  # распознавание рукописи
 """
 
 import base64

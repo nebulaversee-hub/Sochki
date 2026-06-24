@@ -65,14 +65,19 @@ MAX_TOTAL = sum(v[1] for v in CRITERIA.values())  # 22
 # ══════════════════════════════════════════════════════════
 
 # Промпт для распознавания рукописи (возвращает чистый текст, не JSON)
-TRANSCRIBE_PROMPT = """\
+TRANSCRIBE_PROMPT = """
 На изображении — рукописное сочинение ученика ЕГЭ по русскому языку.
 
-Расшифруй рукописный текст МАКСИМАЛЬНО ТОЧНО:
-• Сохраняй ВСЕ знаки препинания: запятые, точки, тире, двоеточия, восклицательные и вопросительные знаки — именно так, как они написаны от руки.
-• Если знак препинания неразборчив — поставь тот, который грамматически уместен в данном месте.
-• Сохраняй абзацы и красные строки.
-• Не добавляй никаких комментариев — верни ТОЛЬКО чистый текст сочинения, без пояснений.
+Расшифруй текст максимально точно.
+
+Правила:
+• Сохраняй абзацы.
+• Сохраняй все знаки препинания.
+• Не исправляй ошибки ученика.
+• Если слово неразборчиво — используй [???].
+• Если знак препинания неразборчив — используй [???].
+• Не придумывай текст.
+• Верни только текст сочинения.
 """
 
 # Промпт для проверки сочинения (возвращает JSON)
@@ -286,8 +291,8 @@ def inject_css():
   --border:   #2D333B;
   --text:     #CDD9E5;
   --muted:    #768390;
-  --accent:   #DC2626;
-  --accent-d: rgba(220,38,38,.14);
+  --accent:   #F5F5F5;
+  --accent-d: rgba(255,255,255,.08);
 }
 
 html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); margin:0; }
@@ -901,7 +906,16 @@ def show_checker():
 </div>
 """, unsafe_allow_html=True)
 
-            st.markdown('<div class="field-label">📝 Расшифровка рукописи (можно редактировать)</div>', unsafe_allow_html=True)
+            st.markdown('<div class="field-label">📄 Оригинальная расшифровка ИИ</div>', unsafe_allow_html=True)
+            st.text_area(
+                "orig_transcription",
+                value=st.session_state.transcription,
+                height=180,
+                disabled=True,
+                label_visibility="collapsed",
+            )
+
+            st.markdown('<div class="field-label">📝 Текст для проверки (можно редактировать)</div>', unsafe_allow_html=True)
             essay_text_photo = st.text_area(
                 "transcribed_label",
                 value=st.session_state.get("transcribed", st.session_state.transcription),
@@ -912,9 +926,18 @@ def show_checker():
             st.markdown("</div>", unsafe_allow_html=True)
 
             st.markdown('<div style="height:16px"></div>', unsafe_allow_html=True)
+            confirmed = st.checkbox(
+                "Я проверил распознанный текст и подтверждаю его корректность"
+            )
+
             _, bc2, _ = st.columns([2.5, 1, 2.5])
             with bc2:
-                check_photo = st.button("🔍 Проверить сочинение", use_container_width=True, key="check_photo")
+                check_photo = st.button(
+                    "🔍 Проверить сочинение",
+                    use_container_width=True,
+                    key="check_photo",
+                    disabled=not confirmed
+                )
 
             if check_photo:
                 src = st.session_state.get("src_photo", "")

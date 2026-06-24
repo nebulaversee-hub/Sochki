@@ -119,7 +119,7 @@ def _client() -> OpenAI:
 def transcribe_image(img_bytes: bytes, img_mime: str) -> str:
     """Шаг 1: отправляет фото рукописи в vision-модель, возвращает расшифрованный текст."""
     client = _client()
-    model = st.secrets.get("OPENROUTER_VISION_MODEL", "qwen/qwen2-vl-7b-instruct:free")
+    model = st.secrets.get("OPENROUTER_VISION_MODEL", "google/gemma-4-31b-it:free")
     b64 = base64.b64encode(img_bytes).decode()
     data_url = f"data:{img_mime};base64,{b64}"
     r = client.chat.completions.create(

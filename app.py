@@ -7,7 +7,7 @@
 .streamlit/secrets.toml:
     OPENROUTER_API_KEY    = "sk-or-..."
     OPENROUTER_MODEL      = "google/gemma-4-31b-it:free"        # текстовая проверка
-    OPENROUTER_VISION_MODEL = "google/gemma-4-31b-it:free"  # распознавание рукописи
+    OPENROUTER_VISION_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free"  # распознавание рукописи
 """
 
 import base64
@@ -131,7 +131,7 @@ def transcribe_images(images: list) -> str:
     Страницы объединяются в один связный текст.
     images — список кортежей (img_bytes, img_mime)."""
     client = _client()
-    model = st.secrets.get("OPENROUTER_VISION_MODEL", "google/gemma-4-31b-it:free")
+    model = st.secrets.get("OPENROUTER_VISION_MODEL", "nvidia/nemotron-nano-12b-v2-vl:free")
 
     total = len(images)
     multi = total > 1

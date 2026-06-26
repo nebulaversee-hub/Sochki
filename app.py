@@ -14,6 +14,7 @@ import base64
 import json
 import re
 from datetime import datetime
+from io import BytesIO
 
 import streamlit as st
 from openai import OpenAI
@@ -29,6 +30,12 @@ st.set_page_config(
 )
 
 # ══════════════════════════════════════════════════════════
+#  Ограничения загрузки
+# ══════════════════════════════════════════════════════════
+MAX_FILES = 5
+MAX_TOTAL_SIZE = 200 * 1024 * 1024  # 200 МБ
+
+# ══════════════════════════════════════════════════════════
 #  Состояние сессии
 # ══════════════════════════════════════════════════════════
 _defaults = {
@@ -38,6 +45,7 @@ _defaults = {
     "input_mode": "text",          # "text" | "photo"
     "transcription": "",           # расшифровка рукописи от ИИ
     "transcription_done": False,   # шаг 1 выполнен
+    "uploaded_files": [],          # список загруженных файлов
 }
 for _k, _v in _defaults.items():
     if _k not in st.session_state:
@@ -88,7 +96,7 @@ PROMPT_TEMPLATE = """\
 
 КРИТЕРИИ (К1–К10, максимум 22 балла):
 К1 (макс 1): Отражение позиции автора. 1 — верно; 0 — нет. Если К1=0, то К2=К3=0.
-К2 (макс 3): Комментарий. 3 — 2 примера+пояснение+связь с пояснением; 2 — 2 примера+пояснение, связь без пояснения; 1 — 1 пример с пояснением; 0 — иначе.
+К2 (макс 3): Комментарий. 3 — 2 примера+пояснение+связь с пояснением; 2 — 2 примера+пояснение, связь без пояснения;[...]
 К3 (макс 2): Своё отношение. 2 — обосновано+пример-аргумент; 1 — обосновано без примера; 0 — только формальное.
 К4 (макс 1): Факты. 1 — ошибок нет; 0 — есть.
 К5 (макс 2): Логика. 2 — ошибок нет; 1 — 1–2; 0 — 3 и более.
@@ -105,7 +113,7 @@ PROMPT_TEMPLATE = """\
 {essay_text}
 
 Верни ТОЛЬКО JSON (без ```, без пояснений вне JSON):
-{{"corrected_text":"полный текст сочинения, каждая ошибка выделена **жирным**","scores":{{"K1":0,"K2":0,"K3":0,"K4":0,"K5":0,"K6":0,"K7":0,"K8":0,"K9":0,"K10":0}},"comments":{{"K1":"","K2":"","K3":"","K4":"","K5":"","K6":"","K7":"","K8":"","K9":"","K10":""}}}}
+{{"corrected_text":"полный текст сочинения, каждая ошибка выделена **жирным**","scores":{{"K1":0,"K2":0,"K3":0,"K4":0,"K5":0,"K6":0,"K7":0,"K8":0,"K9[...]
 """
 
 # ══════════════════════════════════════════════════════════
@@ -441,7 +449,7 @@ html, body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--t
   left:calc(16.66% + 26px); right:calc(16.66% + 26px); height:2px;
   background-image:repeating-linear-gradient(90deg, var(--accent-b) 0, var(--accent-b) 6px, transparent 6px, transparent 14px);
 }
-.step-n { width:52px; height:52px; border-radius:50%; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:700; color:var(--accent); margin-bottom:22px; background:var(--bg); position:relative; z-index:1; box-shadow:0 2px 10px rgba(220,38,38,.12); }
+.step-n { width:52px; height:52px; border-radius:50%; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:1rem; font-weight:700; color:var(--accent); }
 .step-t { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; color:var(--text); margin-bottom:10px; }
 .step-d { color:var(--muted); font-size:.88rem; line-height:1.66; }
 
@@ -529,7 +537,8 @@ button:disabled p, button:disabled div, button:disabled span { color:#AAAEB6 !im
 /* Галерея загруженных страниц */
 .gallery-head { font-size:.82rem; font-weight:600; color:var(--text); margin:18px 0 12px; display:flex; align-items:center; gap:8px; }
 .gallery-head::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); flex-shrink:0; }
-[data-testid="stImage"] img { border-radius:8px; border:1px solid var(--border); }
+.gallery-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:8px; margin-top:12px; }
+[data-testid="stImage"] img { border-radius:8px; border:1px solid var(--border); width:100%; height:auto; object-fit:cover; }
 [data-testid="stImageCaption"] { color:var(--muted) !important; font-size:.74rem !important; }
 
 /* Текстовые области */
@@ -583,7 +592,7 @@ button:disabled p, button:disabled div, button:disabled span { color:#AAAEB6 !im
 .transcr-note strong { color:var(--accent-h); }
 
 /* Результаты — исправленный текст */
-.corr-card { background:var(--card); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:12px; padding:30px 28px; margin-bottom:34px; box-shadow:0 6px 22px rgba(16,18,27,.05); animation:fadeIn .45s ease both; }
+.corr-card { background:var(--card); border:1.5px solid var(--border); border-left:4px solid var(--accent); border-radius:12px; padding:30px 28px; margin-bottom:34px; box-shadow:0 6px 22px rgba(16,18,27,.08); }
 .corr-hdr  { font-family:'Playfair Display',serif; font-size:1.08rem; font-weight:700; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
 .corr-hdr::before { content:''; display:block; width:8px; height:8px; background:var(--accent); border-radius:50%; flex-shrink:0; }
 .corr-body { font-size:.93rem; color:var(--text); line-height:1.84; white-space:pre-wrap; }
@@ -608,8 +617,8 @@ button:disabled p, button:disabled div, button:disabled span { color:#AAAEB6 !im
 .sc-comment { font-size:.8rem; color:var(--muted); line-height:1.56; }
 
 /* Итоговый балл */
-.total-wrap  { display:flex; align-items:center; gap:24px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:26px 28px; margin-bottom:22px; box-shadow:0 6px 22px rgba(16,18,27,.05); animation:fadeIn .6s .5s ease both; opacity:0; animation-fill-mode:both; }
-.total-stamp { width:88px; height:88px; border-radius:50%; border:3px solid var(--accent); background:rgba(220,38,38,.05); display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--accent); flex-shrink:0; animation:stampIn .5s .65s ease both; opacity:0; animation-fill-mode:both; }
+.total-wrap  { display:flex; align-items:center; gap:24px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:26px 28px; margin-bottom:22px; box-shadow:0 6px 22px rgba(16,18,27,.08); }
+.total-stamp { width:88px; height:88px; border-radius:50%; border:3px solid var(--accent); background:rgba(220,38,38,.05); display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--accent); }
 .total-num   { font-family:'JetBrains Mono',monospace; font-size:1.8rem; font-weight:700; line-height:1; }
 .total-den   { font-size:.5rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; opacity:.7; }
 .total-text h3 { font-family:'Playfair Display',serif; font-size:1.18rem; font-weight:700; color:var(--text); margin:0 0 6px; }
@@ -625,6 +634,7 @@ button:disabled p, button:disabled div, button:disabled span { color:#AAAEB6 !im
   .hero-inner{grid-template-columns:1fr;} .paper{display:none;}
   .feat-grid,.steps,.crit-grid,.sc-grid{grid-template-columns:1fr !important;}
   .steps::before{display:none;}
+  .gallery-grid{grid-template-columns:repeat(auto-fill, minmax(80px, 1fr)) !important;}
 }
 </style>
 """, unsafe_allow_html=True)
@@ -705,17 +715,17 @@ def show_home():
       <div class="feat-card">
         <span class="feat-icon">📷</span>
         <div class="feat-title">Читает рукописи</div>
-        <div class="feat-text">Загрузите фотографию сочинения — ИИ расшифрует рукописный текст с сохранением знаков препинания, вы проверите расшифровку и запустите анализ.</div>
+        <div class="feat-text">Загрузите до 5 фотографий сочинения — ИИ расшифрует рукописный текст с сохранением знаков препинания.</div>
       </div>
       <div class="feat-card">
         <span class="feat-icon">📊</span>
         <div class="feat-title">Ставит баллы по К1–К10</div>
-        <div class="feat-text">Каждый из 10 критериев оценивается отдельно с кратким пояснением — вы видите, за что именно снижен балл.</div>
+        <div class="feat-text">Каждый из 10 критериев оценивается отдельно с кратким пояснением — вы видите, за что именно снимаются баллы.</div>
       </div>
       <div class="feat-card">
         <span class="feat-icon">🔍</span>
         <div class="feat-title">Выделяет ошибки</div>
-        <div class="feat-text">Орфографические, пунктуационные, грамматические и речевые ошибки подсвечиваются прямо в тексте сочинения.</div>
+        <div class="feat-text">Орфографические, пунктуационные, грамматические и речевые ошибки подсвечиваются прямо в тексте.</div>
       </div>
     </div>
   </div>
@@ -733,12 +743,12 @@ def show_home():
       <div>
         <div class="step-n">01</div>
         <div class="step-t">Загрузите фото</div>
-        <div class="step-d">Сфотографируйте рукописное сочинение и загрузите его вместе с исходным текстом.</div>
+        <div class="step-d">Сфотографируйте рукописное сочинение на несколько листов (до 5) и загрузите с исходным текстом.</div>
       </div>
       <div>
         <div class="step-n">02</div>
         <div class="step-t">Проверьте расшифровку</div>
-        <div class="step-d">ИИ распознает рукопись и покажет текст. Вы можете исправить ошибки распознавания — особенно запятые и точки.</div>
+        <div class="step-d">ИИ распознает рукопись и покажет текст. Вы можете исправить ошибки распознавания вручную.</div>
       </div>
       <div>
         <div class="step-n">03</div>
@@ -804,6 +814,7 @@ def show_checker():
         st.session_state.result = None
         st.session_state.transcription = ""
         st.session_state.transcription_done = False
+        st.session_state.uploaded_files = []
         if "transcribed" in st.session_state:
             del st.session_state["transcribed"]
         st.rerun()
@@ -901,18 +912,35 @@ def show_checker():
             )
 
         with col2:
-            st.markdown('<div class="field-label">📷 Фотография рукописного сочинения</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="field-label">📷 Фотографии рукописного сочинения (макс. {MAX_FILES} файлов, {MAX_TOTAL_SIZE // (1024*1024)} МБ)</div>', unsafe_allow_html=True)
             uploaded = st.file_uploader(
                 "photo_upload", label_visibility="collapsed",
                 type=["jpg", "jpeg", "png", "webp", "heic"],
-                key="photo_file",
+                accept_multiple_files=True,
+                key="photo_files",
             )
+            
+            # Валидация загруженных файлов
             if uploaded:
-                st.image(uploaded, use_container_width=True)
-                st.markdown(
-                    '<div class="field-note">Убедитесь, что текст чёткий и хорошо освещён</div>',
-                    unsafe_allow_html=True,
-                )
+                # Проверка количества файлов
+                if len(uploaded) > MAX_FILES:
+                    st.error(f"⚠️ Вы загрузили {len(uploaded)} файлов, но максимум {MAX_FILES}")
+                    uploaded = uploaded[:MAX_FILES]
+                
+                # Проверка общего размера
+                total_size = sum(file.size for file in uploaded)
+                if total_size > MAX_TOTAL_SIZE:
+                    st.error(f"⚠️ Общий размер файлов {total_size / (1024*1024):.1f} МБ превышает лимит {MAX_TOTAL_SIZE // (1024*1024)} МБ")
+                    uploaded = []
+                else:
+                    st.session_state.uploaded_files = uploaded
+                    
+                    # Отображение галереи в сетке
+                    st.markdown('<div class="gallery-head">Загруженные страницы</div>', unsafe_allow_html=True)
+                    cols = st.columns(min(len(uploaded), 5))
+                    for idx, file in enumerate(uploaded):
+                        with cols[idx % 5]:
+                            st.image(file, use_container_width=True, caption=f"Стр. {idx+1}")
 
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -924,24 +952,27 @@ def show_checker():
                 "🔤 Распознать рукопись",
                 use_container_width=True,
                 key="transcribe_btn",
-                disabled=not uploaded,
+                disabled=not st.session_state.uploaded_files,
             )
 
         if transcribe_clicked:
-            if not uploaded:
-                st.warning("Сначала загрузите фотографию сочинения.")
+            if not st.session_state.uploaded_files:
+                st.warning("Сначала загрузите фотографии сочинения.")
             elif "OPENROUTER_API_KEY" not in st.secrets:
                 st.error("Не найден ключ OPENROUTER_API_KEY в st.secrets.")
             else:
                 with st.spinner("Читаю рукопись... Это может занять 10–30 секунд."):
                     try:
-                        img_bytes = uploaded.read()
-                        img_mime = uploaded.type or "image/jpeg"
-                        transcription = transcribe_image(img_bytes, img_mime)
+                        images = []
+                        for file in st.session_state.uploaded_files:
+                            img_bytes = file.read()
+                            img_mime = file.type or "image/jpeg"
+                            images.append((img_bytes, img_mime))
+                        
+                        transcription = transcribe_images(images)
                         st.session_state.transcription = transcription
                         st.session_state.transcription_done = True
                         st.session_state.result = None
-                        # сбросить редактируемую область, чтобы подставить новый текст
                         if "transcribed" in st.session_state:
                             del st.session_state["transcribed"]
                         st.rerun()

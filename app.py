@@ -24,7 +24,7 @@ from openai import OpenAI
 # ══════════════════════════════════════════════════════════
 st.set_page_config(
     page_title="ЕГЭ Эксперт",
-    page_icon="📝",
+    page_icon="https://cdn-icons-png.flaticon.com/512/10433/10433049.png",
     layout="wide",
     initial_sidebar_state="collapsed",
 )

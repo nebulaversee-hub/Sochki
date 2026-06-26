@@ -798,7 +798,7 @@ def show_home():
             st.session_state.result = None
             st.rerun()
 
-    st.markdown('<div class="home-footer">ЕГЭ Эксперт · Проверка сочинений на основе критериев ФИПИ 2026</div>', unsafe_allow_html=True)
+    st.markdown('<div class="home-footer">📜ЕГЭ Эксперт · Проверка сочинений на основе критериев ФИПИ 2026</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════
 #  Страница проверки

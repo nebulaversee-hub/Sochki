@@ -171,7 +171,7 @@ def call_api(source_text: str, essay_text: str) -> str:
     prompt = PROMPT_TEMPLATE.format(source_text=source_text, essay_text=essay_text)
     r = client.chat.completions.create(
         model=model,
-        max_tokens=4000,
+        max_tokens=10000,
         messages=[
             {
                 "role": "system",

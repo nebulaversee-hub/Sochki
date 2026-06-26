@@ -214,6 +214,8 @@ def md_bold_to_html(text: str) -> str:
 #  Сборщики HTML
 # ══════════════════════════════════════════════════════════
 def build_score_cards(result: dict) -> str:
+    if not isinstance(result, dict):
+        return ""
     scores   = result.get("scores", {}) or {}
     comments = result.get("comments", {}) or {}
     html = '<div class="sc-grid">'
@@ -267,6 +269,8 @@ def build_total(total: int) -> str:
 
 
 def build_report(src: str, essay: str, result: dict, total: int) -> str:
+    if not isinstance(result, dict):
+        return ""
     scores   = result.get("scores", {}) or {}
     comments = result.get("comments", {}) or {}
     lines = [
@@ -715,7 +719,7 @@ def show_home():
       <div class="feat-card">
         <span class="feat-icon">📷</span>
         <div class="feat-title">Читает рукописи</div>
-        <div class="feat-text">Загрузите до 5 фотографий сочинения — ИИ расшифрует рукописный текст с сохранением знаков препинания.</div>
+        <div class="feat-text">Загрузите до 3 фотографий сочинения — ИИ расшифрует рукописный текст с сохранением знаков препинания.</div>
       </div>
       <div class="feat-card">
         <span class="feat-icon">📊</span>
@@ -743,7 +747,7 @@ def show_home():
       <div>
         <div class="step-n">01</div>
         <div class="step-t">Загрузите фото</div>
-        <div class="step-d">Сфотографируйте рукописное сочинение на несколько листов (до 5) и загрузите с исходным текстом.</div>
+        <div class="step-d">Сфотографируйте рукописное сочинение на несколько листов (до 3) и загрузите с исходным текстом.</div>
       </div>
       <div>
         <div class="step-n">02</div>
@@ -1047,7 +1051,7 @@ def show_checker():
     # ════════════════════════════════
     result = st.session_state.result
 
-    if result:
+    if result and isinstance(result, dict):
         st.markdown('<hr style="border:none;border-top:1px solid var(--border);margin:36px 0">', unsafe_allow_html=True)
         st.markdown('<div style="padding:0 6% 60px;max-width:1200px;margin:0 auto">', unsafe_allow_html=True)
 
@@ -1088,7 +1092,7 @@ def show_checker():
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
-    elif st.session_state.raw and result is None:
+    elif st.session_state.raw and (not result or not isinstance(result, dict)):
         st.markdown('<div style="padding:0 6%;max-width:1200px;margin:0 auto">', unsafe_allow_html=True)
         st.markdown("""
 <div class="err-card">

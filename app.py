@@ -6,7 +6,7 @@
 
 .streamlit/secrets.toml:
     OPENROUTER_API_KEY    = "sk-or-..."
-    OPENROUTER_MODEL      = "google/gemma-4-31b-it:free"        # текстовая проверка
+    OPENROUTER_MODEL      = "nvidia/nemotron-3-ultra-550b-a55b:free"        # текстовая проверка
     OPENROUTER_VISION_MODEL = "google/gemma-4-26b-a4b-it:free"  # распознавание рукописи
 """
 
@@ -167,7 +167,7 @@ def transcribe_images(images: list) -> str:
 def call_api(source_text: str, essay_text: str) -> str:
     """Шаг 2 (и единственный для текстового режима): проверка сочинения, возвращает JSON."""
     client = _client()
-    model = st.secrets.get("OPENROUTER_MODEL", "google/gemma-4-31b-it:free")
+    model = st.secrets.get("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
     prompt = PROMPT_TEMPLATE.format(source_text=source_text, essay_text=essay_text)
     r = client.chat.completions.create(
         model=model,

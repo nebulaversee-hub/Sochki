@@ -32,7 +32,7 @@ st.set_page_config(
 # ══════════════════════════════════════════════════════════
 #  Ограничения загрузки
 # ══════════════════════════════════════════════════════════
-MAX_FILES = 5
+MAX_FILES = 3
 MAX_TOTAL_SIZE = 200 * 1024 * 1024  # 200 МБ
 
 # ══════════════════════════════════════════════════════════
@@ -146,7 +146,7 @@ def transcribe_images(images: list) -> str:
 
     r = client.chat.completions.create(
         model=model,
-        max_tokens=4000,
+        max_tokens=10000,
         messages=[
             {
                 "role": "system",
